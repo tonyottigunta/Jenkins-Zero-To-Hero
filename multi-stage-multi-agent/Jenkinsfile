@@ -32,24 +32,25 @@ pipeline {
   }
 }
 
-    stage('SonarQube Analysis') {
-      agent {
-        docker {
-          image 'maven:3.8.1-adoptopenjdk-11'
-        }
-      }
-      steps {
-        withSonarQubeEnv("${SONARQUBE}") {
-          sh '''
-          mvn sonar:sonar \
-          -Dsonar.projectKey=my-project \
-          -Dsonar.host.url=http://18.60.239.234:9000 \
-          -Dsonar.login=<SONAR_TOKEN>
-          '''
-        }
+   stage('SonarQube Analysis') {
+  agent {
+    docker {
+      image 'maven:3.8.1-adoptopenjdk-11'
+    }
+  }
+  steps {
+    dir('multi-stage-multi-agent') {
+      withSonarQubeEnv("${SONARQUBE}") {
+        sh '''
+        mvn sonar:sonar \
+        -Dsonar.projectKey=my-project \
+        -Dsonar.host.url=http://18.60.239.234:9000 \
+        -Dsonar.login=<SONAR_TOKEN>
+        '''
       }
     }
-
+  }
+}
     stage('Quality Gate') {
       agent {
         docker {
