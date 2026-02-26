@@ -20,15 +20,17 @@ pipeline {
     }
 
     stage('Back-end Build') {
-      agent {
-        docker {
-          image 'maven:3.8.1-adoptopenjdk-11'
-        }
-      }
-      steps {
-        sh 'mvn clean compile'
-      }
+  agent {
+    docker {
+      image 'maven:3.8.1-adoptopenjdk-11'
     }
+  }
+  steps {
+    dir('multi-stage-multi-agent') {
+      sh 'mvn clean compile'
+    }
+  }
+}
 
     stage('SonarQube Analysis') {
       agent {
