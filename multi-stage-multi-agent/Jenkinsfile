@@ -1,21 +1,71 @@
 pipeline {
   agent none
+
+  environment {
+    SONARQUBE = 'sonar-server'
+  }
+
   stages {
-    stage('Back-end') {
+
+    stage('Database') {
       agent {
-        docker { image 'maven:3.8.1-adoptopenjdk-11' }
+        docker {
+          image 'mysql:5.7'
+          args '-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=testdb'
+        }
       }
       steps {
-        sh 'mvn --version'
+        sh 'sleep 20'
       }
     }
+
+    stage('Back-end Build') {
+      agent {
+        docker {
+          image 'maven:3.8.1-adoptopenjdk-11'
+        }
+      }
+      steps {
+        sh 'mvn clean compile'
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      agent {
+        docker {
+          image 'maven:3.8.1-adoptopenjdk-11'
+        }
+      }
+      steps {
+        withSonarQubeEnv("${SONARQUBE}") {
+          sh '''
+          mvn sonar:sonar \
+          -Dsonar.projectKey=my-project \
+          -Dsonar.host.url=http://18.60.239.234:9000 \
+          -Dsonar.login=<SONAR_TOKEN>
+          '''
+        }
+      }
+    }
+
+    stage("Quality Gate") {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+
     stage('Front-end') {
       agent {
-        docker { image 'node:17-alpine' }
+        docker {
+          image 'node:17-alpine'
+        }
       }
       steps {
         sh 'node --version'
       }
     }
+
   }
 }
