@@ -5,20 +5,6 @@ pipeline {
     SONARQUBE = 'sonar-server'
   }
 
-  stages {
-
-    stage('Database') {
-      agent {
-        docker {
-          image 'mysql:5.7'
-          args '-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=testdb'
-        }
-      }
-      steps {
-        sh 'sleep 20'
-      }
-    }
-
     stage('Back-end Build') {
       agent {
         docker {
